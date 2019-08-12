@@ -7,21 +7,27 @@ pipeline {
     APP_NAME = 'test1'
   }
   stages {
-    stage('CI Build and push snapshot') {
+    stage('Pull Request') {
       when {
         branch 'PR-*'
       }
       environment {
         PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
-        PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
-        HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
       }
       steps {
         container('maven') {
-          sh "echo 'on PR-*...'"
+          sh "echo 'on PR-*...' - version $PREVIEW_VERSION"
           sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
           sh "mvn install"
         }
+      }
+    }
+    stage('Deploy QA') {
+      when {
+        branch 'develop'
+      }
+      steps {
+        sh "echo .. deploying qa"
       }
     }
     stage('Build Release') {
